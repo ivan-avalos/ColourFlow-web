@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<!--
+	ColourFlow for web - relax watching ripple colours.
+    Copyright (C) 2019  Iván Ávalos
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<html>
+  <head>
+	<title>Animation!</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style type="text/css">
+	  .container, html, body {
+		  overflow: hidden;
+		  width: 100%;
+		  height: 100%;
+		  margin: 0px;
+	  }
+	  .info {
+		  display: inline-block;
+		  overflow: auto;
+		  top: 0px;
+		  right: 0px;
+		  border: 1px red solid;
+	  }
+	</style>
+  </head>
+  <body>
+	<div class="container">
+	  <canvas id="canvas" />
+	</div>
+	<script>
+	  var canvas = document.querySelector ('#canvas');
+	  var context = canvas.getContext ('2d');
+	  context.canvas.width = window.innerWidth;
+	  context.canvas.height = window.innerHeight;
+	  var width = canvas.width;
+	  var height = canvas.height;
+	  var requestAnimFrame = window.requestAnimationFrame
+		  || window.mozRequestAnimationFrame
+		  || window.webkitRequestAnimationFrame
+		  || window.msRequestAnimationFrame;
+
+	  // Clear canvas
+	  context.clearRect (0, 0, width, height);
+
+	  // Stuff for easing animations
+	  var accuracy = 0.008;
+	  
+	  function easeIn (n) {
+		  return Math.pow (n, 1.7);
+	  }
+	  
+	  var bezier = function (i, t, p0, p1) {
+		  var difference = p1 - p0;
+		  return (p0 + difference * easeIn (i));
+	  }
+
+	  function drawCircle (x, y, radius, fill) {
+		  // Draw a circle
+		  context.beginPath ();
+		  context.arc (x, y, radius, 0, Math.PI * 2, false);
+		  context.closePath ();
+
+		  // Color circle
+		  context.fillStyle = fill;
+		  context.fill ();
+	  }
+
+	  // Random colours! It's great.
+	  var current = 0;
+	  var colours = [
+		  '#e53935',
+		  '#d81b60',
+		  '#8e24aa',
+		  '#5e35b1',
+		  '#3949ab',
+		  '#1e88e5',
+		  '#039be5',
+		  '#00acc1',
+		  '#00897b',
+		  '#43a047',
+		  '#7cb342',
+		  '#c0ca33',
+		  '#fdd835',
+		  '#ffb300',
+		  '#fb8c00',
+		  '#f4511e',
+		  '#6d4c41',
+		  '#757575',
+		  '#546e7a'
+	  ];
+
+	  var newColour = function () {
+		  if (current >= colours.length - 1) {
+			  current = 0;
+		  } else {
+			  current += 1;
+		  }
+		  
+		  console.log ({
+			  length: colours.length,
+			  current: current,
+			  colours: colours[current]
+		  });
+		  
+		  return colours [current];
+	  }
+
+	  // Finally ripple drawing!
+	  var colour = newColour ();
+	  var drawRipple = function (e) {
+		  if (e.target == canvas) {
+			  e.preventDefault ();
+		  }
+		  
+		  var radius = 10;
+		  var x = e.clientX - radius / 2;
+		  var y = e.clientY - radius / 2;
+
+		  var r0 = width / 200;
+		  var r1 = width;
+		  
+		  var bezierI = 0;
+		  var anim = function () {
+			  drawCircle (x, y, radius, colour);
+			  if (radius <= width + width / 2
+				  || radius <= height + height / 2) {
+				  radius += bezier (bezierI, accuracy, r0, r1);
+				  bezierI += accuracy;
+				  requestAnimFrame (anim);
+			  } else {
+				  context.clearRect (0, 0, width, height);
+				  context.fillStyle = colour;
+				  context.fillRect (0, 0, width, height);
+			  }
+		  }; anim ();
+		  var colour = newColour ();
+	  };
+
+	  // Add event listeners
+	  canvas.addEventListener ('touchstart', drawRipple, false);
+	  canvas.addEventListener ('mousedown', drawRipple, false)
+	</script>
+  </body>
+</html>
